@@ -17,4 +17,8 @@ add_executable(CPP_Projects
     "Banking System/src/run.cpp"
     "Banking System/src/transaction.cpp"
     "Banking System/src/user.cpp"
-    "Banking System/src/users.dat")
+    "Banking System/src/users.dat"
+        "Banking System/src/Bank.cpp"
+        "Banking System/headers/Bank.h"
+        "Banking System/src/TransactionBlock.cpp"
+        "Banking System/headers/TransactionBlock.h")
