@@ -7,6 +7,16 @@
 #include "../headers/run.h"
 #include "../headers/transaction.h"
 
+/**
+ * Main function to manage a banking system, handling user creation, deletion,
+ * transactions, and displaying user information.
+ *
+ * This function initializes the banking system, loads data from files, and allows
+ * the user to interact with the system through a command-based menu interface.
+ *
+ * @return Returns 0 upon successful execution and proper cleanup of resources.
+ * Returns 1 if necessary files for storing data cannot be opened.
+ */
 int main() {
     Bank bank;  // Bank class to manage users and transactions globally.
 
