@@ -1,42 +1,47 @@
-#include <iostream>
-#include <fstream>
-#include <cstring>
-#include "../headers/user.h"
-#include "../headers/transaction.h"
-
+#include "transaction.h"
+#include "user.h"
+#include <sstream>
+#include <stdexcept>
+#include <ctime>
 
 /**
- * Constructs a Transaction object with the specified sender, receiver, number of coins, and timestamp.
+ * Constructs a Transaction object to record a transfer of coins between two users.
+ * Validates that the transaction meets the minimum coin threshold and that the
+ * sender has sufficient balance to complete the transaction.
  *
- * @param sender The User who is sending the coins in this transaction.
- * @param receiver The User who is receiving the coins in this transaction.
+ * @param sender The User object representing the sender of the transaction.
+ * @param receiver The User object representing the receiver of the transaction.
  * @param coins The amount of coins being transferred in the transaction.
- * @param time The timestamp of when the transaction was created.
+ * @param time The timestamp indicating when the transaction occurred.
+ * @throw std::invalid_argument If the transaction amount is below the minimum threshold.
+ * @throw std::invalid_argument If the sender has insufficient balance for the transaction.
  */
-Transaction::Transaction(User sender,
-                         User receiver,
+Transaction::Transaction(const User& sender,
+                         const User& receiver,
                          double coins,
-                         long long time) {
-    this->sender = sender;
-    this->receiver = receiver;
-    this->coins = coins;
-    this->time = time;
+                         long long time)
+    : sender(sender), receiver(receiver), coins(coins), time(time) {
+    if (coins < MINIMUM_COINS) {
+        throw std::invalid_argument("Transaction failed: Amount is below the minimum threshold.");
+    }
+    if (sender.getBalance() < coins) {
+        throw std::invalid_argument("Transaction failed: Sender's balance is insufficient.");
+    }
 }
 
 /**
- * Computes a hash value for a given memory block using a custom hashing algorithm.
+ * Computes a 16-bit hash value for the given input string data.
+ * The hash value is calculated using a combination of
+ * bitwise operations and arithmetic manipulation for consistency.
  *
- * @param memory A pointer to the memory block for which the hash is to be computed.
- * @param length The number of bytes in the memory block to process.
- * @return A 16-bit hash value generated from the input memory block.
+ * @param data The input string for which the hash value is to be computed.
+ * @return A 16-bit unsigned integer representing the hash of the input string.
  */
-uint16_t Transaction::computeHash(const unsigned char *memory, int length)
-{
-    unsigned hash = 0xbeaf;
+uint16_t Transaction::computeHash(const std::string& data) {
+    unsigned hash = 0xbeef; // A seed value
 
-    for (int c = 0; c < length; c++)
-    {
-        hash += memory[c];
+    for (char c : data) {
+        hash += c;
         hash += hash << 10;
         hash ^= hash >> 6;
     }
@@ -44,85 +49,57 @@ uint16_t Transaction::computeHash(const unsigned char *memory, int length)
     hash += hash << 3;
     hash ^= hash >> 11;
     hash += hash << 15;
-    return hash;
+
+    return static_cast<uint16_t>(hash);
 }
 
 /**
- * @brief Prints transaction details including sender, receiver, amount of coins, and timestamp.
+ * @brief Prints the information of the transaction to the standard output.
  *
- * This method displays detailed information regarding a transaction. It includes:
- * - The sender's name.
+ * This method outputs the details of a transaction to the console, including:
+ * - The name of the sender.
  * - The amount of coins transferred.
- * - The receiver's name.
- * - The time when the transaction occurred.
+ * - The name of the receiver.
+ * - The timestamp of the transaction.
  *
- * The information is formatted for readability and printed directly to the standard output stream.
+ * The output is formatted as:
+ * "Transaction: [sender_name] sent [coins] coins to [receiver_name] at time [timestamp]"
  *
- * @note The method has no return value.
- * @note This does not alter any member variables in the `Transaction` class.
+ * @note This function does not modify the state of the transaction object.
  */
 void Transaction::printTransactionInformation() const {
-    std::cout << "Sender: "     << sender.getName()
-              << "sent"         << coins << " Coins: "
-              << "Receiver: "   << receiver.getName()
-              << ", Time: "     << time << std::endl;
+    std::cout << "Transaction: "
+              << sender.getName() << " sent " << coins
+              << " coins to " << receiver.getName()
+              << " at time " << time << std::endl;
 }
 
 /**
- * Overloads the insertion operator to print the details of a transaction.
+ * Overloaded output stream operator for printing the details of a Transaction object.
  *
- * @param transaction The transaction object whose details are to be displayed.
+ * @param os The output stream where the transaction details will be written.
+ * @param transaction The Transaction object whose details are to be written to the output stream.
+ * @return A reference to the output stream after writing the transaction details.
  */
-void Transaction::operator<<(const Transaction &transaction) const {
-
-    std::cout << "Transaction: " << transaction.sender.getName() << " sent " << transaction.coins << " coins to " << transaction.receiver.getName() << std::endl;
-    std::cout << "Time: "        << transaction.time << std::endl;
-    std::cout << std::endl;
+std::ostream& operator<<(std::ostream& os, const Transaction& transaction) {
+    os << "Sender: " << transaction.sender.getName()
+       << ", Receiver: " << transaction.receiver.getName()
+       << ", Coins: " << transaction.coins
+       << ", Time: " << transaction.time;
+    return os;
 }
 
 /**
- * Checks whether the provided user is valid.
+ * Verifies the validity of the current transaction.
  *
- * A valid user is defined as one with a non-zero ID and
- * a non-empty name.
+ * A transaction is considered valid if the amount of coins
+ * being transferred meets the minimum transaction requirement
+ * and the sender has an adequate balance to cover the transfer.
  *
- * @param user A reference to the User object to validate.
- * @return true if the user is valid, false otherwise.
+ * @return true if the transaction is valid, false otherwise.
  */
-bool Transaction::isValidUser(const User &user) {
-       return user.getId() != 0 && !user.getName().empty();
-   }
-
-/**
- * Verifies the validity of the transaction by checking sender and receiver details.
- *
- * This method validates if both the sender and receiver are valid users,
- * and verifies that their details match the transaction's stored data.
- * Additional checks can be implemented as needed (e.g., cryptographic or balance checks).
- *
- * @param sender The sender user involved in the transaction.
- * @param receiver The receiver user involved in the transaction.
- * @return True if the transaction is valid, otherwise false.
- */
-bool Transaction::verifyTransaction(const User& sender, const User& receiver) const {
-    try {
-        // Check if sender and receiver are valid users
-        if (!isValidUser(sender) || !isValidUser(receiver)) {
-            throw std::invalid_argument("Invalid sender or receiver.");
-        }
-
-        // Check if sender and receiver match this transaction's sender and receiver
-        if (this->sender.getId()    != sender.getId() ||
-            this->receiver.getId()  != receiver.getId()) {
-            throw std::logic_error("Transaction details do not match sender or receiver.");
-        }
-
-        // Add any additional checks here (e.g., balance verification, cryptographic checks)
-
-        return true; // If all checks pass, the transaction is valid
-    } catch (...) {
-        // Catch any exceptions, silently handle or log the error if necessary
-        return false;
-    }
+bool Transaction::verifyTransaction() const {
+    if (coins < MINIMUM_COINS) return false;
+    if (sender.getBalance() < coins) return false;
+    return true;
 }
-

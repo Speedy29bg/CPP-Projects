@@ -1,39 +1,32 @@
-#ifndef BANK_H
-#define BANK_H
+#pragma once
 
-#include "transaction.h"
-#include "user.h"
 #include <vector>
+#include "user.h"
+#include "transaction.h"
 
+/**
+ * @class Bank
+ * @brief Represents a banking system that manages users and their transactions.
+ *
+ * The Bank class provides functionalities to manage users, execute transactions
+ * between them, and generate reports such as displaying the wealthiest users.
+ */
 class Bank {
 private:
-    std::vector<User> users;              // List of users
-    std::vector<Transaction> transactions; // List of transactions
-    int userCount{};                      // Count of users
-    long long totalAmountOfMoney{};       // Total amount of money in system
+    std::vector<User> users; // List of users managed by the bank
+    std::vector<Transaction> transactions; // List of all transactions
 
 public:
-    Bank() = default;
-    Bank(std::vector<User> users, std::vector<Transaction> transactions);
-
     // Core functionality
-    void addUser(User user);                      // Add a user
-    bool deleteUser(const std::string& userName); // Delete a user by name
-    bool findUser(const std::string& userName, User& user) const; // Find a user by name
-    std::vector<User> getUsers() const;           // Get all users
-    bool makeTransaction(std::fstream& usersFile, std::fstream& blocksFile,
-                         const User& sender, const User& receiver, double coins); // Make a transaction
+    void addUser(const User& user);
+    bool deleteUser(const std::string& userName);
+    bool findUser(const std::string& userName, User& user) const;
 
-    // Transactions management
-    void addTransaction(Transaction transaction); // Add a transaction
+    // Transactions
+    void makeTransaction(const User& sender, const User& receiver, double coins);
 
-    // Reporting and information
-    void printWealthiestUsers(size_t count) const; // Print wealthiest users
-    void printBankInformation() const;            // Print bank info
+    // Reports
+    void printWealthiestUsers(size_t count) const;
 
-    ~Bank() = default; // Default destructor
+    ~Bank() = default;
 };
-
-#endif
-
-

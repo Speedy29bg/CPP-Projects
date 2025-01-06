@@ -1,129 +1,97 @@
 #include <iostream>
-#include <fstream>
-#include <cstring>
-
 #include "Bank.h"
-#include "../headers/user.h"
-#include "../headers/run.h"
-#include "../headers/transaction.h"
+#include "User.h"
+#include "Transaction.h"
+#include "TransactionBlock.h"
 
 /**
- * Main function to manage a banking system, handling user creation, deletion,
- * transactions, and displaying user information.
+ * @brief The main entry point of the application.
  *
- * This function initializes the banking system, loads data from files, and allows
- * the user to interact with the system through a command-based menu interface.
+ * This function initializes a banking system, performing operations like
+ * adding users, conducting transactions, deleting users, and managing
+ * transaction blocks. It demonstrates multiple functionalities of a Bank
+ * system such as printing the wealthiest users, validating and displaying
+ * transactions, and managing a blockchain of transaction blocks.
  *
- * @return Returns 0 upon successful execution and proper cleanup of resources.
- * Returns 1 if necessary files for storing data cannot be opened.
+ * The program handles exceptions for invalid transactions or errors
+ * during execution, ensuring proper resource management and error reporting.
+ *
+ * @return Returns 0 upon successful execution, or other values in case of failure.
  */
 int main() {
-    Bank bank;  // Bank class to manage users and transactions globally.
+    try {
+        // Create a bank
+        Bank myBank;
 
-    // Open required files for persisting user and block data.
-    std::fstream blocksFile("blocks.dat", std::ios::binary | std::ios::app | std::ios::in | std::ios::out);
-    std::fstream usersFile("users.dat", std::ios::binary | std::ios::app | std::ios::in | std::ios::out);
+        // Create some users
+        User user1(1, "Alice", 500.0);
+        User user2(2, "Bob", 300.0);
+        User user3(3, "Charlie", 120.0);
+        User user4(4, "Diana", 800.0);
 
-    // Handle file operation issues.
-    if (!blocksFile.is_open() || !usersFile.is_open()) {
-        std::cout << "Error: Unable to open necessary files for storing data.\n";
-        return 1; // Signal failure if files cannot be opened.
+        // Add users to the bank
+        myBank.addUser(user1);
+        myBank.addUser(user2);
+        myBank.addUser(user3);
+        myBank.addUser(user4);
+
+        // Print initial wealthiest users
+        std::cout << "\nInitial Wealthiest Users:\n";
+        myBank.printWealthiestUsers(3);
+
+        // Conduct some valid transactions
+        std::cout << "\nConducting Transactions:\n";
+        myBank.makeTransaction(user1, user2, 50.0); // Alice pays 50 to Bob
+        myBank.makeTransaction(user4, user3, 100.0); // Diana pays 100 to Charlie
+
+        // Print the wealthiest users after transactions
+        std::cout << "\nWealthiest Users After Transactions:\n";
+        myBank.printWealthiestUsers(3);
+
+        // Attempt an invalid transaction (insufficient balance)
+        std::cout << "\nAttempting Invalid Transaction:\n";
+        try {
+            myBank.makeTransaction(user3, user1, 500.0); // Charlie tries to send 500 coins to Alice
+        } catch (const std::exception& e) {
+            std::cerr << e.what() << std::endl;
+        }
+
+        // Remove a user (e.g., Bob) from the bank
+        std::cout << "\nRemoving User (Bob):\n";
+        if (myBank.deleteUser("Bob")) {
+            std::cout << "Bob has been removed from the bank.\n";
+        } else {
+            std::cout << "Bob could not be found in the bank.\n";
+        }
+
+        // Print all users after removal
+        std::cout << "\nWealthiest Users After Removal:\n";
+        myBank.printWealthiestUsers(10); // Print all users for clarity
+
+        // Create a transaction block
+        std::cout << "\nCreating and Displaying Transaction Block:\n";
+        TransactionBlock block(1, 0, 0xbeaf, 2); // Initial transaction block
+        block.printBlockInformation();
+
+        // Modify block attributes and print again
+        block.setValidTransactions(3);
+        block.setPrevBlockHash(0xabcd);
+        std::cout << "\nUpdated Transaction Block Information:\n";
+        block.printBlockInformation();
+
+        // Verify a transaction manually
+        std::cout << "\nVerifying Manual Transaction:\n";
+        Transaction customTransaction(user1, user2, 20.0, time(nullptr));
+        if (customTransaction.verifyTransaction()) {
+            std::cout << "Transaction verified successfully!\n";
+            customTransaction.printTransactionInformation();
+        } else {
+            std::cout << "Transaction verification failed.\n";
+        }
+
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
     }
-
-    std::cout << "Successfully loaded data from files.\n";
-
-    menu();  // Show the menu to the user.
-
-    char command[128];  // Buffer for inputting commands.
-    while (true) {
-        std::cout << "\nEnter your command: ";
-        std::cin.getline(command, sizeof(command));
-
-        // Handle specific commands.
-        if (strcmp(command, "create-user") == 0) {
-            char userName[128];
-            std::cout << "Enter user name: ";
-            std::cin.getline(userName, sizeof(userName));
-
-            uint16_t userId;
-            std::cout << "Enter user ID: ";
-            std::cin >> userId;
-            std::cin.ignore(); // Flush the newline character.
-
-            // Create new user and add to the system.
-            User newUser(userId, userName);
-            bank.addUser(newUser);
-            std::cout << "User created successfully.\n";
-        }
-        else if (strcmp(command, "print") == 0) {
-            // Print all users from the system.
-            for (const User& user : bank.getUsers()) {  // Assuming a `getUsers()` method in `Bank`.
-                user.printUserInformation(user);
-            }
-        }
-        else if (strcmp(command, "print-users-coins") == 0) {
-            // Show user balances (assuming `printUsersCoins()` is implemented).
-            printUsersCoins(usersFile, blocksFile);
-        }
-        else if (strcmp(command, "delete-user") == 0) {
-            char userName[128];
-            std::cout << "Enter the name of the user to delete: ";
-            std::cin.getline(userName, sizeof(userName));
-
-            // Delete user via Bank class method (assuming `deleteUser()` method exists).
-            if (bank.deleteUser(userName)) {
-                std::cout << "User deleted successfully.\n";
-            } else {
-                std::cout << "Error: User not found or could not be deleted.\n";
-            }
-        }
-        else if (strcmp(command, "make-transaction") == 0) {
-            char senderName[128], receiverName[128];
-            size_t amount;
-
-            std::cout << "Enter sender name: ";
-            std::cin.getline(senderName, sizeof(senderName));
-            std::cout << "Enter receiver name: ";
-            std::cin.getline(receiverName, sizeof(receiverName));
-            std::cout << "Enter amount: ";
-            std::cin >> amount;
-            std::cin.ignore(); // Flush the newline character.
-
-            User sender, receiver;
-
-            // Find users in Bank system (assuming `findUser()` is implemented).
-            bool senderFound = bank.findUser(senderName, sender);
-            bool receiverFound = bank.findUser(receiverName, receiver);
-
-            if (senderFound && receiverFound) {
-                bank.makeTransaction(usersFile, blocksFile, sender, receiver, static_cast<double>(amount));
-                std::cout << "Transaction completed successfully.\n";
-            } else {
-                std::cout << "Error: One or both users not found.\n";
-            }
-        }
-        else if (strcmp(command, "wealthiest-users") == 0) {
-            size_t count;
-            std::cout << "Enter the number of wealthiest users to display: ";
-            std::cin >> count;
-            std::cin.ignore(); // Flush newline character.
-
-            bank.printWealthiestUsers(count);
-        }
-        else if (strcmp(command, "exit") == 0) {
-            // Exit the program.
-            std::cout << "Exiting program.\n";
-            break;
-        }
-        else {
-            std::cout << "Invalid command. Please try again.\n";
-            menu();  // Re-display the menu if an invalid command is entered.
-        }
-    }
-
-    // Close the files for cleanup.
-    blocksFile.close();
-    usersFile.close();
 
     return 0;
 }

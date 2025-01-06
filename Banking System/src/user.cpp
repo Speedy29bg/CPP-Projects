@@ -5,76 +5,28 @@
 #include "../headers/user.h"
 #include "../headers/transaction.h"
 
-#include "../headers/user.h"
 
 /**
- * @brief Constructs a User object with a specified ID and name.
+ * Constructor for the User class.
  *
  * @param id The unique identifier for the user.
  * @param name The name of the user.
- * @return This constructor does not return a value.
+ * @param balance The initial balance of the user. Defaults to 0.0 if not provided.
+ * @return A new instance of the User class initialized with the provided values.
  */
-User::User(uint16_t id, std::string name) : id(id), name(std::move(name)) {}
+User::User(uint16_t id, std::string name, double balance)
+    : id(id), name(std::move(name)), balance(balance) {}
 
 /**
- * @brief Copy constructor for the User class.
+ * @brief Prints the user's information to the standard output.
  *
- * Creates a new User object by copying the id and name from another User instance.
+ * Displays the user's ID, name, and current balance in a formatted manner.
+ * This method is intended for providing a quick summary of the user's details.
  *
- * @param user The User object to be copied.
- * @return A new User object initialized with values from the provided User instance.
+ * @note This function does not modify the state of the User object.
  */
-User::User(const User &user) : id(user.id), name(user.name) {}
-
-/**
- * @brief Move constructor for the User class.
- *
- * Constructs a new User instance by moving data from another User object.
- *
- * @param user An rvalue reference to another User object from which the data is moved.
- * @return A new User object with the data from the provided User object. The provided User object is left in a
- * valid but unspecified state.
- */
-User::User(const User &&user) noexcept : id(user.id), name(std::move(user.name)) {}
-
-/**
- * Overloaded assignment operator that copies the values from one User object to another.
- *
- * @param user The User object to copy the data from.
- * @return A reference to the current User object after assignment.
- */
-User &User::operator=(const User &user) {
-    if (this != &user) {
-        id = user.id;
-        name = user.name;
-    }
-    return *this;
+void User::printUserInformation() const {
+    std::cout << "User ID: " << id << "\n"
+              << "Name: " << name << "\n"
+              << "Balance: " << balance << "\n";
 }
-
-/**
- * Retrieves the unique identifier (ID) of the user.
- *
- * @return The ID of the user as an unsigned 16-bit integer.
- */
-const uint16_t User::getId() const {
-    return id;
-}
-
-/**
- * @brief Retrieves the name of the user.
- *
- * @return A const reference to the name of the user as a std::string.
- */
-const std::string &User::getName() const {
-    return name;
-}
-
-/**
- * Prints the information of the specified user.
- *
- * @param user Reference to the User object whose information is to be printed.
- */
-const void User::printUserInformation(const User &user) const {
-    std::cout << "User ID: " << id << ", Name: " << name << std::endl;
-}
-

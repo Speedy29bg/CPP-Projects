@@ -8,14 +8,11 @@ include_directories("Banking System/headers")
 include_directories("Banking System/src")
 
 add_executable(CPP_Projects
-    "Banking System/headers/run.h"
-    "Banking System/headers/transaction.h"
+        "Banking System/headers/transaction.h"
     "Banking System/headers/user.h"
-    "Banking System/src/a.exe"
     "Banking System/src/blocks.dat"
     "Banking System/src/main.cpp"
-    "Banking System/src/run.cpp"
-    "Banking System/src/transaction.cpp"
+        "Banking System/src/transaction.cpp"
     "Banking System/src/user.cpp"
     "Banking System/src/users.dat"
         "Banking System/src/Bank.cpp"
