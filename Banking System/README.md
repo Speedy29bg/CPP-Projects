@@ -96,7 +96,7 @@ Handles the overall banking system:
 This project has no external dependencies beyond standard C++ libraries.
 
 ## License
-This project is open-source and free to use.
+This project was created by Speedy29bg and is not free to use without permission or proper licensing.
 
 ## Acknowledgments
-This project demonstrates object-oriented programming and basic principles of blockchain technology in C++. It serves as a learning resource for beginner-intermediate developers exploring C++.
+This project was created by Speedy29bg and demonstrates object-oriented programming and basic principles of blockchain technology in C++. Licensing is required for use or modification of this project.
